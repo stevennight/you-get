@@ -192,7 +192,7 @@ class Youku(VideoExtractor):
                 log.wtf('Unknown error')
 
         # Audio languages
-        self.jp_vid = self.vid;
+        self.jp_vid = "";
         self.jp_url = "";
         if 'dvd' in self.api_data:
             al = self.api_data['dvd'].get('audiolang')
@@ -205,8 +205,8 @@ class Youku(VideoExtractor):
                         self.jp_url = i['url'];
 
         # 重定向到日语。
-        if self.vid != self.jp_vid:
-            print('jpvid != vid')
+        if self.jp_vid and self.vid != self.jp_vid:
+            print('重定向到日语')
             self.url = self.jp_url
             self.vid = self.jp_vid
             self.prepare(**kwargs)
