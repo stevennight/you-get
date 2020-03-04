@@ -38,8 +38,9 @@ def fetch_cna():
 
 class Youku(VideoExtractor):
     name = "优酷 (Youku)"
-    mobile_ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.101 Safari/537.36'
-    dispatcher_url = 'vali.cp31.ott.cibntv.net'
+    mobile_ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36'
+    # dispatcher_url = 'vali.cp31.ott.cibntv.net'
+    dispatcher_url = 'valipl-vip.cp31.ott.cibntv.net'
 
     # Last updated: 2017-10-13
     stream_types = [
@@ -94,6 +95,7 @@ class Youku(VideoExtractor):
             url += '&password=' + self.password
         headers = dict(Referer=self.referer)
         headers['User-Agent'] = self.ua
+        print(url)
         api_meta = json.loads(get_content(url, headers=headers))
 
         self.api_data = api_meta['data']
@@ -189,6 +191,27 @@ class Youku(VideoExtractor):
             else:
                 log.wtf('Unknown error')
 
+        # Audio languages
+        self.jp_vid = self.vid;
+        self.jp_url = "";
+        if 'dvd' in self.api_data:
+            al = self.api_data['dvd'].get('audiolang')
+            if al:
+                self.audiolang = al
+                for i in self.audiolang: 
+                    i['url'] = 'http://v.youku.com/v_show/id_{}'.format(i['vid'])
+                    if i['langcode'] == 'ja':
+                        self.jp_vid = i['vid'];
+                        self.jp_url = i['url'];
+
+        # 重定向到日语。
+        if self.vid != self.jp_vid:
+            print('jpvid != vid')
+            self.url = self.jp_url
+            self.vid = self.jp_vid
+            self.prepare(**kwargs)
+            return
+
         self.title = self.api_data['video']['title']
         stream_types = dict([(i['id'], i) for i in self.stream_types])
         audio_lang = self.api_data['stream'][0]['audio_lang']
@@ -232,13 +255,7 @@ class Youku(VideoExtractor):
             if is_preview:
                 log.w('{} is a preview'.format(stream_id))
 
-        # Audio languages
-        if 'dvd' in self.api_data:
-            al = self.api_data['dvd'].get('audiolang')
-            if al:
-                self.audiolang = al
-                for i in self.audiolang:
-                    i['url'] = 'http://v.youku.com/v_show/id_{}'.format(i['vid'])
+
 
 
 def youku_download_playlist_by_url(url, **kwargs):
